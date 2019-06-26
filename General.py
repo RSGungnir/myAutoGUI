@@ -75,10 +75,12 @@ def isPicInArea(point_topleft, point_bottomright, path_picture):
 
 
 def initial():
-    global SCREEN_RESOLUTION
     global WINDOW_POSITION
     global DISPLAY_LOCATION
     global TITLE_HEIGHT
+    global WINDOW_TITLE_PATH
+    global DISPLAY_HEIGHT
+    global DISPLAY_WIDTH
     # pyautogui参数设置
     pag.FAILSAFE = True  # 鼠标移至左上退出模式
     pag.PAUSE = 0.2      # 脚本执行最小间隔时间
@@ -86,8 +88,10 @@ def initial():
     while True:
         WINDOW_POSITION = pag.locateOnScreen(WINDOW_TITLE_PATH)
         if WINDOW_POSITION:
+            WINDOW_POSITION = (WINDOW_POSITION.left, WINDOW_POSITION.top)
             break
         else:
             pag.alert(text='未找到窗口,请确保窗口非最小化且未被遮挡', title='警告', button='重试')
     # 计算画面位置
-    DISPLAY_LOCATION = (WINDOW_POSITION.left, WINDOW_POSITION.top+TITLE_HEIGHT, DISPLAY_WIDTH, DISPLAY_HEIGHT)
+    DISPLAY_LOCATION = (WINDOW_POSITION[0], WINDOW_POSITION[1]+TITLE_HEIGHT, DISPLAY_WIDTH, DISPLAY_HEIGHT)
+    print('WINDOW_POSITION: ', WINDOW_POSITION, '\nDISPLAY_LOCATION: ', DISPLAY_LOCATION)

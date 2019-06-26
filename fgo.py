@@ -9,18 +9,26 @@ RUN = 1
 
 class Operator:
     def __init__(self):
-        pass
+        self.instructions = {'daily':''}
+        print('operator done')
     
     def operate(self, cmd):
-        cmd = cmd.split(' ')
-        exp = r'self.{fun}(*{par})'.format(fun=cmd[0], par=cmd[1:])
+        cmd = cmd.split()
+        if len(cmd) == 1:
+            exp = r'self.{fun}()'.format(fun=cmd[0])
+        else:
+            exp = r'self.{fun}({par})'.format(fun=cmd[0], par=cmd[1])
         try:
             eval(exp)
-        except AttributeError as e:
-            print('AttributeError', e)
+        except AttributeError:
+            print(cmd[0],'not defined')
     
-    def act(self, *args):
-        pass
+    def run(self, par):
+        try:
+            instruction = self.instruction[par]
+            
+        except KeyError:
+            print('no "{}" option'.format(par))
     
     def quit(self, *args):
         global RUN
@@ -29,6 +37,8 @@ class Operator:
 
 def main():
     op = Operator()
+    initial()
+    print('initial done')
     while RUN:
         op.operate(input())
 
