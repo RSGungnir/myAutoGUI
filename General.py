@@ -74,6 +74,18 @@ def isPicInArea(point_topleft, point_bottomright, path_picture):
     return bool(pag.locate(path_picture, shot))
 
 
+class Executor:
+    def __init__(self, game):
+        self.name = game
+    
+    def reader(self, instructions):
+        for ins in instructions:
+            self.execute(ins)
+    
+    def execute(self, ins):
+        pass
+
+
 def initial():
     global WINDOW_POSITION
     global DISPLAY_LOCATION

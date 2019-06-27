@@ -4,15 +4,22 @@
 
 from General import *
 import pyautogui as pag
+import json
 
+GAME = 'FGO'
+SCRIPT_PATH = r'.\scripts\FGO.json'
 RUN = 1
+initial()
 
-class Operator:
+class Orderer:
     def __init__(self):
-        self.instructions = {'daily':''}
-        print('operator done')
+        global GAME
+        global SCRIPT_PATH
+        with open(SCRIPT_PATH, 'r') as f:
+            self.instruction_set = json.load(f)
+        self.executor = Executor(GAME)
     
-    def operate(self, cmd):
+    def order(self, cmd):
         cmd = cmd.split()
         if len(cmd) == 1:
             exp = r'self.{fun}()'.format(fun=cmd[0])
@@ -25,10 +32,11 @@ class Operator:
     
     def run(self, par):
         try:
-            instruction = self.instruction[par]
-            
+            instructions = self.instruction_set[par]
+            self.executor.reader(instructions)
         except KeyError:
             print('no "{}" option'.format(par))
+            # TODO: Guess what the actual command is and give suggestion.
     
     def quit(self, *args):
         global RUN
@@ -37,8 +45,6 @@ class Operator:
 
 def main():
     op = Operator()
-    initial()
-    print('initial done')
     while RUN:
         op.operate(input())
 
