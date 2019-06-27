@@ -15,17 +15,22 @@ import json
 # 下列参数仅适用于网易MuMu模拟器
 # 下一个可能添加支持的模拟器为雷电模拟器
 # 后续可能添加对其他主流模拟器的支持
-config = configparser.ConfigParser()
-config.read('config.ini')
-DISPLAY_WIDTH = int(config['MuMu']['display_width'])    # 游戏画面宽度
-DISPLAY_HEIGHT = int(config['MuMu']['display_height'])  # 游戏画面高度
-WINDOW_TITLE_PATH = str(config['MuMu']['title_pic'])    # 窗口标题图片
-TITLE_HEIGHT = int(config['MuMu']['title_height'])      # 标题栏高度
 
 class Point:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+    def __init__(self, *args, **kwargs):
+        if kwargs:
+            self.x = kwargs['x']
+            self.y = kwargs['y']
+        elif len(args) == 2:
+            self.x = args[0]
+            self.y = args[1]
+        elif len(args) == 1:
+            if isinstance(args[0], tuple):
+                self.x, self.y = args[0]
+            elif isinstance(args[0], str):
+                self.x, self.y = eval(str)
+        else:
+            raise TypeError
     
     def revise(self):
         global DISPLAY_LOCATION
