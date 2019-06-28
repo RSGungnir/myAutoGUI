@@ -3,6 +3,7 @@
 通过Listener读取用户的命令，通过Worker在模拟器上执行操作
 模拟器的相关参数储存于config.ini配置文件中，目前仅支持网易MuMu模拟器
 具体游戏的操作操作和相关参数位于script文件夹中
+不同的脚本可将Worker的ins_info(str)针对不同游戏转换为基本操作的组合(list(str))，从而实现统一执行
 '''
 # TODO: 完善注释
 # TODO: 添加对雷电模拟器的支持
@@ -11,6 +12,7 @@
 import random
 import pyautogui as pag
 import time
+
 
 class Point:
     def __init__(self, *args, **kwargs):
@@ -84,10 +86,12 @@ class Worker:
         self.listener = listener
     
     def told(self, ins_info):
-        pass
+        instructions = scr.trans(ins_info)
+        self.execute(instructions)
     
-    def execute(self, instruction):
-        pass
+    def execute(self, instructions):
+        for instruction in instructions:
+            exec(instruction)
 
 
 class Listener:
@@ -158,6 +162,6 @@ if __name__ == '__main__':
     SIMULATOR = input('模拟器：\n') or 'MuMu'
     GAME = input('游戏：\n') or 'FGO'
     initial(SIMULATOR)
-    exec(f'import scripts.{GAME} as scr')
+    scr = __import__(f'scripts.{GAME}')
     elf = Listener(GAME)
     elf.listen()
