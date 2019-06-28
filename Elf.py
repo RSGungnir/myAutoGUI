@@ -1,20 +1,16 @@
 '''
-包含了所有的基础函数和类
+包含了通用的基础函数和类
 通过Listener读取用户的命令，通过Worker在模拟器上执行操作
-模拟器和各游戏的相关参数储存于config.ini配置文件中
-具体脚本位于script文件夹中，暂按json格式储存
+模拟器的相关参数储存于config.ini配置文件中，目前仅支持网易MuMu模拟器
+具体游戏的操作操作和相关参数位于script文件夹中
 '''
 # TODO: 完善注释
+# TODO: 添加对雷电模拟器的支持
+# TODO: 添加对其他主流模拟器的支持
 
 import random
 import pyautogui as pag
 import time
-import configparser
-import json
-
-# 仅适用于网易MuMu模拟器
-# TODO: 添加对雷电模拟器的支持
-# TODO: 添加对其他主流模拟器的支持
 
 class Point:
     def __init__(self, *args, **kwargs):
@@ -86,29 +82,12 @@ class Worker:
     def __init__(self, game, listener):
         self.game = game
         self.listener = listener
-        with open(f'.\scripts\{game}.json', 'r') as f:
-            self.instruction_set = json.load(f)
     
     def told(self, ins_info):
-        try:
-            instruction = self.instruction_set[ins_info]
-        except KeyError:
-            self.listener.reply('指令参数错误')
-        else:
-            self.execute(instruction)
+        pass
     
     def execute(self, instruction):
-    # TODO: execute方法尚未完成
-        ins_info, num, start, end = instruction
-        while not eval(str(start)):
-            time.sleep(0.05)
-        for i in range(num):
-            if ins_info in ('tap', 'hold', 'drag'):
-                exec(f'{ins_info}()')
-            else:
-                self.told(ins_info)
-        while not eval(str(end)):
-            time.sleep(0.05)
+        pass
 
 
 class Listener:
@@ -138,32 +117,32 @@ class Listener:
         self.running = False
         # TODO: 对需要保存的数据进行序列化
     
-    def reply(self, info):
-        print(info)
+    def reply(self, *info):
+        for i in info:
+            print(i)
     
     def help(self):
-        print('help: show this')
-        print('quit: save and exit')
+        self.reply('help: show this')
+        self.reply('quit: save and exit')
         # TODO: 完善帮助信息
 
 
-def initial(simulator, game):
+def initial(simulator):
+    import configparser
     global WINDOW_POSITION    # 窗口位置
     global DISPLAY_LOCATION   # 游戏画面位置和大小
     global TITLE_HEIGHT       # 标题栏高度
     global WINDOW_TITLE_PATH  # 窗口标题图片
     global DISPLAY_HEIGHT     # 游戏画面高度
     global DISPLAY_WIDTH      # 游戏画面宽度
-    global GAME_PARAMETER     # 游戏相关参数
     pag.FAILSAFE = True       # 鼠标移至左上角退出
-    pag.PAUSE = 0.2           # 脚本执行最小间隔时间
+    pag.PAUSE = 0.1           # 脚本执行最小间隔时间
     config = configparser.ConfigParser()
     config.read('config.ini')
     DISPLAY_WIDTH = int(config[simulator]['display_width'])
     DISPLAY_HEIGHT = int(config[simulator]['display_height'])
     WINDOW_TITLE_PATH = str(config[simulator]['title_pic'])
     TITLE_HEIGHT = int(config[simulator]['title_height'])
-    GAME_PARAMETER = config[game]
     while True:
         WINDOW_POSITION = pag.locateOnScreen(WINDOW_TITLE_PATH)
         if WINDOW_POSITION:
@@ -178,6 +157,7 @@ def initial(simulator, game):
 if __name__ == '__main__':
     SIMULATOR = input('模拟器：\n') or 'MuMu'
     GAME = input('游戏：\n') or 'FGO'
-    initial(SIMULATOR, GAME)
+    initial(SIMULATOR)
+    exec(f'import scripts.{GAME} as scr')
     elf = Listener(GAME)
     elf.listen()
