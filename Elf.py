@@ -2,7 +2,7 @@
 包含了所有的基础函数和类
 通过Listener读取用户的命令，通过Worker在模拟器上执行操作
 模拟器和各游戏的相关参数储存于config.ini配置文件中
-具体脚本位于script文件夹中，暂定为json文件
+具体脚本位于script文件夹中，暂按json格式储存
 '''
 # TODO: 完善注释
 
@@ -12,9 +12,9 @@ import time
 import configparser
 import json
 
-# 下列参数仅适用于网易MuMu模拟器
-# 下一个可能添加支持的模拟器为雷电模拟器
-# 后续可能添加对其他主流模拟器的支持
+# 仅适用于网易MuMu模拟器
+# TODO: 添加对雷电模拟器的支持
+# TODO: 添加对其他主流模拟器的支持
 
 class Point:
     def __init__(self, *args, **kwargs):
@@ -83,23 +83,38 @@ def isPicInArea(point_topleft, point_bottomright, path_picture):
 
 
 class Worker:
-    def __init__(self, game):
+    def __init__(self, game, listener):
         self.game = game
+        self.listener = listener
+        with open(f'.\scripts\{game}.json', 'r') as f:
+            self.instruction_set = json.load(f)
     
-    def told(self, instructions):
-        for ins in instructions:
-            self.execute(ins)
+    def told(self, ins_info):
+        try:
+            instruction = self.instruction_set[ins_info]
+        except KeyError:
+            self.listener.reply('指令参数错误')
+        else:
+            self.execute(instruction)
     
-    def execute(self, ins):
-        print(ins)
+    def execute(self, instruction):
+    # TODO: execute方法尚未完成
+        ins_info, num, start, end = instruction
+        while not eval(str(start)):
+            time.sleep(0.05)
+        for i in range(num):
+            if ins_info in ('tap', 'hold', 'drag'):
+                exec(f'{ins_info}()')
+            else:
+                self.told(ins_info)
+        while not eval(str(end)):
+            time.sleep(0.05)
 
 
 class Listener:
     def __init__(self, game):
         self.game = game
-        with open(f'.\scripts\{game}.json', 'r') as f:
-            self.instruction_set = json.load(f)
-        self.worker = Worker(game)
+        self.worker = Worker(game, self)
         self.running = True
     
     def listen(self):
@@ -116,20 +131,15 @@ class Listener:
             except TypeError:
                 print(f'{cmd[0]}成员不可用')
     
-    def run(self, par):
-        try:
-            instructions = self.instruction_set[par]
-            self.tell(instructions)
-        except KeyError:
-            print(f'"{par}"为未知参数')
-            # TODO: 猜测正确的参数
+    def run(self, para):
+        self.worker.told(para)
     
-    def tell(self, info):
-        self.worker.told(info)
-    
-    def quit(self, *args):
+    def quit(self):
         self.running = False
         # TODO: 对需要保存的数据进行序列化
+    
+    def reply(self, info):
+        print(info)
     
     def help(self):
         print('help: show this')
@@ -137,13 +147,14 @@ class Listener:
         # TODO: 完善帮助信息
 
 
-def initial(simulator):
+def initial(simulator, game):
     global WINDOW_POSITION    # 窗口位置
     global DISPLAY_LOCATION   # 游戏画面位置和大小
     global TITLE_HEIGHT       # 标题栏高度
     global WINDOW_TITLE_PATH  # 窗口标题图片
     global DISPLAY_HEIGHT     # 游戏画面高度
     global DISPLAY_WIDTH      # 游戏画面宽度
+    global GAME_PARAMETER     # 游戏相关参数
     pag.FAILSAFE = True       # 鼠标移至左上角退出
     pag.PAUSE = 0.2           # 脚本执行最小间隔时间
     config = configparser.ConfigParser()
@@ -152,6 +163,7 @@ def initial(simulator):
     DISPLAY_HEIGHT = int(config[simulator]['display_height'])
     WINDOW_TITLE_PATH = str(config[simulator]['title_pic'])
     TITLE_HEIGHT = int(config[simulator]['title_height'])
+    GAME_PARAMETER = config[game]
     while True:
         WINDOW_POSITION = pag.locateOnScreen(WINDOW_TITLE_PATH)
         if WINDOW_POSITION:
@@ -165,7 +177,7 @@ def initial(simulator):
 
 if __name__ == '__main__':
     SIMULATOR = input('模拟器：\n') or 'MuMu'
-    initial(SIMULATOR)
     GAME = input('游戏：\n') or 'FGO'
+    initial(SIMULATOR, GAME)
     elf = Listener(GAME)
     elf.listen()
