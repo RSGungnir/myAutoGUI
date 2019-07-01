@@ -12,7 +12,7 @@
 import random
 import pyautogui as pag
 import time
-
+# TODO: 使用pillow库进行图片识别
 
 class Point:
     def __init__(self, *args, **kwargs):
@@ -75,9 +75,26 @@ def drag(point_start, point_end):
 
 @offset
 def isPicInArea(point_topleft, point_bottomright, path_picture):
+    # TODO: 每次读图片文件效率低，改为在初始化时一次性读取所有图片文件，并缓存为Image对象，提高效率
     area = (point_topleft.x, point_topleft.y, point_bottomright.x-point_topleft.x, point_bottomright.y-point_topleft.y)
     shot = pag.screenshot(region=area)
-    return bool(pag.locate(path_picture, shot))
+    return pag.locate(path_picture, shot)
+
+
+def waitFor(event, interval=0.2, timelimit=None):
+    starttime = time.time()
+    while not event:
+        time.sleep(interval)
+        if timelimit:
+            if time.time() - starttime >= timelimit:
+                raise TimeOutError(timelimit)
+
+
+class TimeOutError(Exception):
+    def __init__(self, time):
+        self.value = time
+    def __str__(self):
+        return f'No expected event occurs in {self.value} second'
 
 
 class Worker:
@@ -131,7 +148,7 @@ class Listener:
         # TODO: 完善帮助信息
 
 
-def initial(simulator):
+def initial(simulator, game):
     import configparser
     global WINDOW_POSITION    # 窗口位置
     global DISPLAY_LOCATION   # 游戏画面位置和大小
@@ -156,12 +173,13 @@ def initial(simulator):
             pag.alert(text='未找到窗口,请确保窗口非最小化且未被遮挡', title='警告', button='重试')
     DISPLAY_LOCATION = (WINDOW_POSITION[0], WINDOW_POSITION[1]+TITLE_HEIGHT, DISPLAY_WIDTH, DISPLAY_HEIGHT)
     print('WINDOW_POSITION: ', WINDOW_POSITION, '\nDISPLAY_LOCATION: ', DISPLAY_LOCATION)
+    # TODO: 读取图片文件
 
 
 if __name__ == '__main__':
     SIMULATOR = input('模拟器：\n') or 'MuMu'
     GAME = input('游戏：\n') or 'FGO'
-    initial(SIMULATOR)
+    initial(SIMULATOR, GAME)
     scr = __import__(f'scripts.{GAME}')
     elf = Listener(GAME)
     elf.listen()
